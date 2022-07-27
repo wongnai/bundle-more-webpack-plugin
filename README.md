@@ -7,6 +7,8 @@
 
 Webpack Plugin to bundle extra sources to your app.
 
+ps. Support Webpack >= 5
+
 ## Installation
 
 ```
