@@ -30,3 +30,20 @@ module.exports = {
     ]
 }
 ```
+
+custom entry name
+
+```js
+const { BundleMoreWebpackPlugin } = require('bundle-more-webpack-plugin')
+
+module.exports = {
+    ...
+    plugins: [
+        ...,
+        new BundleMoreWebpackPlugin(
+            ['file-path-to-bundle']
+            , 'main' // default 'client'
+        )
+    ]
+}
+```
