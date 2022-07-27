@@ -1,21 +1,42 @@
-import Webpack from 'webpack'
-import InjectPlugin from 'webpack-inject-plugin'
-import fs from 'fs'
+import Webpack, { Compiler } from 'webpack'
 
 const PLUGIN_NAME = 'BundleMoreWebpackPlugin'
 
-export class BundleMoreWebpackPlugin{
-    paths: string[]
+const DEFAULT_ENTRY_NAME = 'client'
 
-    constructor(paths: string[]) {
-        this.paths = paths
-    }
+function injectEntry(
+	options: Compiler['options'],
+	entryName: string,
+	injectFilepath: string[],
+): void {
+	const entry: any =
+		typeof options.entry === 'function' ? options.entry() : Promise.resolve(options.entry)
 
-    apply(compiler: Webpack.Compiler) {
-        this.paths.forEach(path => {
-            new InjectPlugin(() => {
-                return fs.readFileSync(path, 'utf8')
-            }).apply(compiler)
-        })
-    }
+	options.entry = () =>
+		entry.then((e: any) => {
+			const injectEntry: typeof e[string] | undefined = e[entryName]
+
+			if (!injectEntry?.import) {
+				throw new Error(
+					`Could not find an entry named '${entryName}'. See https://webpack.js.org/concepts/entry-points/ for an overview of webpack entries.`,
+				)
+			}
+
+			injectEntry.import.unshift(...injectFilepath)
+
+			return e
+		})
+}
+export class BundleMoreWebpackPlugin {
+	entryName: string
+	paths: string[]
+
+	constructor(paths: string[], entryName = DEFAULT_ENTRY_NAME) {
+		this.paths = paths
+		this.entryName = entryName
+	}
+
+	apply(compiler: Webpack.Compiler) {
+		injectEntry(compiler.options, this.entryName, this.paths)
+	}
 }
